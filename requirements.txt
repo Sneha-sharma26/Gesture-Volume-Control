@@ -1,0 +1,7 @@
+# Core Dependencies for Gesture Volume Control
+flask>=3.0.0
+opencv-python>=4.8.0
+mediapipe>=0.10.30
+numpy>=2.2.0
+pycaw>=20230407
+comtypes>=1.2.0

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gesture Volume Control Web App</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1: #0f172a;
+    --accent-a: #1e3c72;
+    --accent-b: #2a5298;
+    --glass: rgba(255,255,255,0.08);
+    --glass-strong: rgba(255,255,255,0.13);
+    --muted: rgba(255,255,255,0.75);
+    --success: #28a745;
+    --danger: #dc3545;
+  }
+
+  *{box-sizing:border-box}
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: radial-gradient(1000px 600px at 10% 10%, rgba(255,255,255,0.03), transparent),
+                linear-gradient(135deg, var(--accent-a), var(--accent-b));
+    color:#fff;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    width:100%;
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    backdrop-filter: blur(6px);
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  }
+  header h1{
+    font-size:20px;
+    margin:0;
+    letter-spacing:0.2px;
+    font-weight:700;
+  }
+  header p{
+    margin:0;
+    opacity:0.9;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  /* main layout: three columns */
+  main{
+    display:grid;
+    grid-template-columns: 360px 1fr 360px;
+    gap:28px;
+    width:calc(100% - 56px);
+    margin:28px;
+    align-items:start;
+  }
+
+  /* LEFT: camera + controls */
+  .left {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .camera-wrap{
+    border-radius:14px;
+    overflow:hidden;
+    background:#000;
+    box-shadow: 0 18px 40px rgba(2,6,23,0.6);
+    position:relative;
+  }
+  video#camera{
+    display:block;
+    width:100%;
+    height:320px;
+    object-fit:cover;
+    background:#000;
+  }
+
+  .controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .btn {
+    padding:10px 16px;
+    border-radius:10px;
+    border:0;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .14s ease, box-shadow .14s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.32);
+  }
+  .btn:active{ transform:translateY(1px); }
+  .start { background: linear-gradient(180deg,#36d17b,#1bb25b); color:#072010; }
+  .stop  { background: linear-gradient(180deg,#ff7675,#e23d3d); color:#fff; }
+  .muted { background: transparent; border:1px solid rgba(255,255,255,0.08); color:var(--muted); }
+
+  .volume-box{
+    margin-top:6px;
+    padding:12px 14px;
+    border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    font-weight:600;
+    color:var(--muted);
+  }
+
+  .volume-value{
+    font-size:20px;
+    letter-spacing:0.6px;
+  }
+
+  /* CENTER: reserved for commands */
+  .center{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:18px;
+  }
+  .placeholder{
+    flex:1;
+    min-height:320px;
+    border-radius:14px;
+    border:2px dashed rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: rgba(255,255,255,0.6);
+    font-weight:600;
+    padding:20px;
+    text-align:center;
+  }
+
+  /* RIGHT: instructions */
+  .right{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .card{
+    padding:16px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 10px 30px rgba(2,6,23,0.45);
+  }
+  .card h3{ margin:0 0 8px 0; font-size:16px; }
+  .card ol{ margin:0 0 0 18px; padding:0; color:var(--muted); }
+  .card ul{ margin:8px 0 0 18px; padding:0; color:var(--muted); }
+
+  .hint { font-size:13px; color:var(--muted); margin-top:8px; }
+
+  footer{
+    width:100%;
+    padding:12px 28px;
+    margin-top:10px;
+    color:rgba(255,255,255,0.7);
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  /* responsive */
+  @media (max-width:1100px){
+    main{ grid-template-columns: 1fr; width:calc(100% - 40px); margin:20px; }
+    .camera-wrap video{ height:260px; }
+    .center .placeholder{ min-height:220px; }
+  }
+</style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>Gesture Volume Control Web App</h1>
+      <p style="margin-top:6px">Control system volume using hand gestures</p>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT -->
+    <section class="left">
+      <div class="camera-wrap" aria-label="Camera preview">
+        <img src="/video_feed" width="640" height="480">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="controls">
+          <button class="btn start" id="startBtn" title="Start camera (S)">Start Camera</button>
+          <button class="btn stop" id="stopBtn" title="Stop camera (X)">Stop Camera</button>
+          <button class="btn muted" id="toggleCamBtn" title="Toggle camera feed visibility (T)">Hide Feed</button>
+        </div>
+
+        
+      </div>
+    </section>
+
+    <!-- CENTER -->
+    <section class="center">
+      <!-- System status-->
+      <div class="card" style="text-align:center">
+        <h3>System Status</h3>
+
+        <div style="
+          display:flex;
+          justify-content:space-around;
+          align-items:center;
+          margin-top:16px;
+          gap:20px;
+        ">
+
+          <div>
+            <div style="font-size:14px; color:var(--muted)">System Volume</div>
+            <div
+              id="volumeValue"
+              style="font-size:36px; font-weight:700; margin-top:6px"
+            >
+              --%
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:14px; color:var(--muted)">Status</div>
+            <div
+              id="statusText"
+              style="font-size:18px; font-weight:600; margin-top:10px"
+            >
+              Idle
+          </div>
+        </div>
+      </div>
+
+      <br>
+
+      <!-- Hand Gesture img -->
+      <div class="gesture-visual">
+        <img src="{{ url_for('static', filename='gestures.png') }}"
+          alt="Gesture instructions for volume control"
+          style="width:70%; height:auto;">
+        <p class="gesture-caption">Hand Gestures for Volume Control</p>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <aside class="right">
+      <div class="card">
+        <h3>How to use — Quick Steps</h3>
+        <ol>
+          <li>Allow camera access when the browser asks.</li>
+          <li>Press <strong>Start Camera</strong> to begin streaming.</li>
+          <li>Use gestures (your model) to change volume — volume value appears left.</li>
+          <li>Press <strong>Stop Camera</strong> to completely stop the stream and free the camera.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Helpful Tips & Best Practices</h3>
+        <ul>
+          <li>Good lighting: face the light source for clearer hand detection.</li>
+          <li>Neutral background reduces false detections.</li>
+          <li>Keep camera at about eye/shoulder height for steady framing.</li>
+          <li>Test in a quiet environment if you add audio feedback.</li>
+        </ul>
+        <!-- <div class="hint">Pro tip: Use the <strong>Hide Feed</strong> button to hide the video if you only want outputs in the center column.</div> -->
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <div>© 2024 Gesture Volume Control</div>
+  </footer>
+
+<script>
+  const volText = document.getElementById("volumeValue");
+  const statusText = document.getElementById("statusText");
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const toggleBtn = document.getElementById('toggleCamBtn');
+  const cameraWrap = document.querySelector('.camera-wrap');
+  let feedHidden = false;
+
+  // Poll volume every 300ms
+  setInterval(async () => {
+    try {
+      const res = await fetch("/volume");
+      const data = await res.json();
+      volText.innerText = data.volume + "%";
+    } catch (e) {
+      // backend not ready
+    }
+  }, 300);
+
+  // Start gesture control
+  startBtn.onclick = async () => {
+    try {
+      await fetch('/start', { method: 'POST' });
+      statusText.innerText = 'Gesture control running';
+      statusText.style.color = '#28a745';
+    } catch (e) {
+      statusText.innerText = 'Error starting';
+      statusText.style.color = '#dc3545';
+    }
+  };
+
+  // Stop gesture control
+  stopBtn.onclick = async () => {
+    try {
+      await fetch('/stop', { method: 'POST' });
+      statusText.innerText = 'Gesture control stopped';
+      statusText.style.color = '#ffc107';
+    } catch (e) {
+      statusText.innerText = 'Error stopping';
+      statusText.style.color = '#dc3545';
+    }
+  };
+
+  // Toggle camera feed visibility
+  toggleBtn.onclick = () => {
+    feedHidden = !feedHidden;
+    cameraWrap.style.display = feedHidden ? 'none' : 'block';
+    toggleBtn.innerText = feedHidden ? 'Show Feed' : 'Hide Feed';
+    statusText.innerText = feedHidden ? 'Feed hidden' : 'Feed visible';
+  };
+</script>
+</body>
+</html>
