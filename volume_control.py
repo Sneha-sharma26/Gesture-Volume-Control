@@ -29,18 +29,34 @@ volume = cast(interface, POINTER(IAudioEndpointVolume))
 minVol, maxVol = volume.GetVolumeRange()[:2]
 
 # -------------------- Global State -------------------- #
-gesture_running = False
 current_volume_percent = 0
+system_status = "Idle"
 
 # -------- SMOOTHING VARIABLES -------- #
 volume_history = []
 SMOOTHING_WINDOW = 5   # number of frames to average
 
+def is_palm_open(lmList):
+    """
+    Returns True if palm is open (5 fingers extended)
+    """
+    fingers = []
+
+    # Thumb
+    fingers.append(lmList[4][1] > lmList[3][1])
+
+    # Other fingers
+    tips = [8, 12, 16, 20]
+    for tip in tips:
+        fingers.append(lmList[tip][2] < lmList[tip - 2][2])
+
+    return fingers.count(True) == 5
+
 
 def gen_frames():
-    global gesture_running, current_volume_percent, volume_history
-    
-    while gesture_running:
+    global current_volume_percent, volume_history
+
+    while True:
         success, img = cap.read()
         if not success:
             print("Failed to capture video")
@@ -61,52 +77,43 @@ def gen_frames():
 
                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 
-            # Thumb tip = id 4
-            # Index tip = id 8
-            x1, y1 = lmList[4][1], lmList[4][2]
-            x2, y2 = lmList[8][1], lmList[8][2]
+            palm_open = is_palm_open(lmList)
 
-            cv2.circle(img, (x1, y1), 10, (255, 0, 0), cv2.FILLED)
-            cv2.circle(img, (x2, y2), 10, (255, 0, 0), cv2.FILLED)
+            if palm_open:
+                cv2.putText(
+                    img,
+                    "VOLUME PAUSED (PALM)",
+                    (30, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 0, 255),
+                    3
+                )
+            else:
+                # Thumb tip = id 4, Index tip = id 8
+                x1, y1 = lmList[4][1], lmList[4][2]
+                x2, y2 = lmList[8][1], lmList[8][2]
 
-            # Line between thumb and index finger tips
-            cv2.line(img, (x1,y1), (x2,y2), (0,255,0), 3)
+                length = math.hypot(x2 - x1, y2 - y1)
 
-            # Distance between thumb and index finger tips
-            length = int(math.hypot(x2-x1, y2-y1))
+                # ---------------- VOLUME CONTROL SECTION ---------------- #
+                
+                # Map distance (20 to 200) → volume range (minVol to maxVol)
+                vol = np.interp(length, [20, 200], [minVol, maxVol])
 
-            cv2.putText(img, f"Distance: {length}", (30,100),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255), 2)
+                volume_history.append(vol)
+                if len(volume_history) > SMOOTHING_WINDOW:
+                    volume_history.pop(0)
 
-            # ---------------- VOLUME CONTROL SECTION ---------------- #
-        
-            # Map distance (20 to 200) → volume range (minVol to maxVol)
-            vol = np.interp(length, [20, 200], [minVol, maxVol])
+                smooth_volume = sum(volume_history) / len(volume_history)
+                
+                # Set smoothed volume
+                volume.SetMasterVolumeLevel(smooth_volume, None)
 
-            # Simple Moving Average Smoothing
-            volume_history.append(vol)
-            if len(volume_history) > SMOOTHING_WINDOW:
-                volume_history.pop(0)
-
-            smooth_volume = sum(volume_history) / len(volume_history)
-
-            # Set smoothed volume
-            volume.SetMasterVolumeLevel(smooth_volume, None)
-            
-            # Display Volume % and Volume Bar
-            volBar = np.interp(length, [20, 200], [400, 150])  # Bar height
-            volPer = np.interp(length, [20, 200], [0, 100])    # Percentage
-
-            current_volume_percent = int(volPer)
-            
-            # Volume Bar Outline
-            cv2.rectangle(img, (50,150), (85,400), (0,255,0), 3)
-            # Volume Bar Fill
-            cv2.rectangle(img, (50,int(volBar)), (85,400), (0,255,0), cv2.FILLED)
-
-            # Volume Percentage Text
-            cv2.putText(img, f"{int(volPer)} %", (40, 430),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                # Display Volume % 
+                current_volume_percent = int(
+                    np.interp(length, [20, 200], [0, 100])
+                )
 
         _, buffer = cv2.imencode('.jpg', img)
         yield (b'--frame\r\n'
@@ -120,21 +127,6 @@ def index():
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-@app.route("/start", methods=["POST"])
-def start_gesture():
-    """Start gesture control"""
-    global gesture_running
-    if not gesture_running:
-        gesture_running = True
-    return jsonify({"status": "started"})
-
-@app.route("/stop", methods=["POST"])
-def stop_gesture():
-    """Stop gesture control"""
-    global gesture_running
-    gesture_running = False
-    return jsonify({"status": "stopped"})
 
 @app.route("/volume")
 def get_volume():

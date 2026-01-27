@@ -199,8 +199,6 @@
 
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div class="controls">
-          <button class="btn start" id="startBtn" title="Start camera (S)">Start Camera</button>
-          <button class="btn stop" id="stopBtn" title="Stop camera (X)">Stop Camera</button>
           <button class="btn muted" id="toggleCamBtn" title="Toggle camera feed visibility (T)">Hide Feed</button>
         </div>
 
@@ -286,8 +284,6 @@
 <script>
   const volText = document.getElementById("volumeValue");
   const statusText = document.getElementById("statusText");
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
   const toggleBtn = document.getElementById('toggleCamBtn');
   const cameraWrap = document.querySelector('.camera-wrap');
   let feedHidden = false;
@@ -302,30 +298,6 @@
       // backend not ready
     }
   }, 300);
-
-  // Start gesture control
-  startBtn.onclick = async () => {
-    try {
-      await fetch('/start', { method: 'POST' });
-      statusText.innerText = 'Gesture control running';
-      statusText.style.color = '#28a745';
-    } catch (e) {
-      statusText.innerText = 'Error starting';
-      statusText.style.color = '#dc3545';
-    }
-  };
-
-  // Stop gesture control
-  stopBtn.onclick = async () => {
-    try {
-      await fetch('/stop', { method: 'POST' });
-      statusText.innerText = 'Gesture control stopped';
-      statusText.style.color = '#ffc107';
-    } catch (e) {
-      statusText.innerText = 'Error stopping';
-      statusText.style.color = '#dc3545';
-    }
-  };
 
   // Toggle camera feed visibility
   toggleBtn.onclick = () => {
