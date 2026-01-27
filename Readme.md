@@ -50,6 +50,8 @@ Install dependencies with:
 pip install -r requirements.txt
 ```
 
+---
+
 ## 🎯 How to Run
 
 Clone the repository:
@@ -73,12 +75,16 @@ python main.py
 
 👁️ Allow access to your webcam if prompted.
 
+---
+
 ## 🖱️ Controls
 | Action | Gesture |
 |--------|---------|
 | Increase Volume | Move fingers farther apart |
 | Decrease Volume | Bring fingers closer together |
 | Quit Program | Press q in the window |
+
+---
 
 ## 🧩 Folder Structure
 
@@ -90,11 +96,15 @@ Gesture-Volume-Control/
 └── README.md
 ```
 
+---
+
 ## 🧪 Expected Output
 
 1. ✔️ Webcam window showing hand
 2. ✔️ UI indicating volume level bar
 3. ✔️ Real-time volume changing with gestures
+
+---
 
 ## 🏆 Tips for Use
 
@@ -102,12 +112,16 @@ Gesture-Volume-Control/
 2. Keep hand within camera range
 3. Try with different backgrounds
 
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! You can:
 1. Add support for other OS volume controls
 2. Add sound effects
 3. Improve visual UI
+
+---
 
 ## 📜 License
 
