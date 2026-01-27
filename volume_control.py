@@ -54,7 +54,7 @@ def is_palm_open(lmList):
 
 
 def gen_frames():
-    global current_volume_percent, volume_history
+    global current_volume_percent, volume_history, system_status
 
     while True:
         success, img = cap.read()
@@ -67,6 +67,7 @@ def gen_frames():
         results = hands.process(imgRGB)  # sends RGB image to hands detection model
     
         if results.multi_hand_landmarks:  # multi_hand_landmarks = list of all hands detected
+            system_status = "Hand detected"
             for handLms in results.multi_hand_landmarks:
                 # handLms = landmarks of one hand
                 lmList = []
@@ -80,16 +81,11 @@ def gen_frames():
             palm_open = is_palm_open(lmList)
 
             if palm_open:
-                cv2.putText(
-                    img,
-                    "VOLUME PAUSED (PALM)",
-                    (30, 80),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 0, 255),
-                    3
-                )
+                system_status = "Volume paused! (Palm Open)"
+                # do nothing with volume
             else:
+                system_status = "Adjusting volume"
+                
                 # Thumb tip = id 4, Index tip = id 8
                 x1, y1 = lmList[4][1], lmList[4][2]
                 x2, y2 = lmList[8][1], lmList[8][2]
@@ -115,6 +111,9 @@ def gen_frames():
                     np.interp(length, [20, 200], [0, 100])
                 )
 
+        else:
+            system_status = "No hand detected"
+            
         _, buffer = cv2.imencode('.jpg', img)
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
@@ -131,7 +130,7 @@ def video_feed():
 @app.route("/volume")
 def get_volume():
     """Send current volume % to UI"""
-    return jsonify({"volume": current_volume_percent})
+    return jsonify({"volume": current_volume_percent, "status": system_status})
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)

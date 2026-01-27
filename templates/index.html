@@ -293,7 +293,19 @@
     try {
       const res = await fetch("/volume");
       const data = await res.json();
+
       volText.innerText = data.volume + "%";
+      statusText.innerText = data.status;
+
+      // color logic
+      if (data.status.includes("paused")) {
+        statusText.style.color = "#ffc107";
+      } else if (data.status.includes("Adjusting")) {
+        statusText.style.color = "#28a745";
+      } else {
+        statusText.style.color = "#f4f4f5";
+      }
+
     } catch (e) {
       // backend not ready
     }
