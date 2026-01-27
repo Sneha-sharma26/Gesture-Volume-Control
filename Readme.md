@@ -50,71 +50,65 @@ Install dependencies with:
 pip install -r requirements.txt
 ```
 
-🎯 How to Run
+## 🎯 How to Run
 
 Clone the repository:
 
+```bash
 git clone https://github.com/Sneha-sharma26/Gesture-Volume-Control.git
 cd Gesture-Volume-Control
-
+```
 
 Install dependencies:
 
+```bash
 pip install -r requirements.txt
-
+```
 
 Run the app:
 
+```bash
 python main.py
-
+```
 
 👁️ Allow access to your webcam if prompted.
 
-🖱️ Controls
-Action	Gesture
-Increase Volume	Move fingers farther apart
-Decrease Volume	Bring fingers closer together
-Quit Program	Press q in the window
-🧩 Folder Structure
+## 🖱️ Controls
+| Action | Gesture |
+|--------|---------|
+| Increase Volume | Move fingers farther apart |
+| Decrease Volume | Bring fingers closer together |
+| Quit Program | Press q in the window |
+
+## 🧩 Folder Structure
+
+```text
 Gesture-Volume-Control/
 ├── main.py
 ├── HandTrackingModule.py
 ├── requirements.txt
 └── README.md
+```
 
-🧪 Expected Output
+## 🧪 Expected Output
 
-✔️ Webcam window showing hand
+1. ✔️ Webcam window showing hand
+2. ✔️ UI indicating volume level bar
+3. ✔️ Real-time volume changing with gestures
 
-✔️ UI indicating volume level bar
+## 🏆 Tips for Use
 
-✔️ Real-time volume changing with gestures
+1. Good lighting improves accuracy 🕯️
+2. Keep hand within camera range
+3. Try with different backgrounds
 
-🏆 Tips for Use
-
-Good lighting improves accuracy 🕯️
-
-Keep hand within camera range
-
-Try with different backgrounds
-
-📄 Screenshots
-
-(Add screenshots here using Markdown image syntax)
-
-![screenshot1](path/to/screenshot1.png)
-![screenshot2](path/to/screenshot2.png)
-
-🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome! You can:
+1. Add support for other OS volume controls
+2. Add sound effects
+3. Improve visual UI
 
-Add support for other OS volume controls
+## 📜 License
 
-Add sound effects
-
-Improve visual UI
-
-📜 License
-
-Distributed under the MIT License — see LICENSE for details.
+Distributed under the **MIT License** — see `LICENSE` for details.
