@@ -69,6 +69,27 @@
     gap:18px;
   }
 
+  canvas {
+    max-height: 180px;
+  }
+
+  .chart-card {
+    height: 280px;
+    padding: 18px 16px;
+    border-radius: 14px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.49),
+      rgba(255, 255, 255, 0.8)
+    );
+    box-shadow: inset 0 0 0 1px rgba(253, 251, 251, 0.76);
+  }
+
+  #volumeChart{
+    width:100%;
+    height:260px;
+  }
+
   /* CENTER */
   .center{
     display:flex;
@@ -203,6 +224,17 @@
   <main>
     <!-- LEFT -->
     <section class="left">
+      <div class="card chart-card">
+        <h3 style="margin-bottom:8px;">Live Volume Vs Time Graph</h3><br>
+        <canvas id="volumeChart"></canvas>
+      </div>
+      
+      <div class="gesture-visual">
+        <p class="gesture-caption">Hand Gestures for Volume Control</p>
+        <img src="{{url_for('static', filename='gestures.png') }}"
+          alt="Gesture instructions for volume control"
+          style="width:90%; height:auto;">
+      </div>
 
     </section>
 
@@ -234,15 +266,6 @@
         </div>
 
       </div>
-
-      <!-- Hand Gesture img 
-      <div class="gesture-visual">
-        <img src="{{ url_for('static', filename='gestures.png') }}"
-          alt="Gesture instructions for volume control"
-          style="width:70%; height:auto;">
-        <p class="gesture-caption">Hand Gestures for Volume Control</p>
-      </div>
-      -->
     </section>
 
     <!-- RIGHT -->
@@ -274,12 +297,94 @@
     <div>© 2024 Gesture Volume Control</div>
   </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
   const volText = document.getElementById("volumeValue");
   const statusText = document.getElementById("statusText");
   const toggleBtn = document.getElementById('toggleCamBtn');
   const cameraWrap = document.querySelector('.camera-wrap');
   let feedHidden = false;
+  let volumeChart = null;
+
+  function initChart() {
+    const canvas = document.getElementById("volumeChart");
+    if (!canvas || typeof Chart === "undefined") {
+      console.warn("Chart not initialized");
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+
+    volumeChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: "#21de76",
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          duration: 0
+        },
+        plugins: {
+          legend: {
+            display: false,
+            labels: {
+              color: "#e5e7eb",
+              font: { weight: "600" }
+            }
+          },
+          tooltip: {
+            backgroundColor: "rgba(106, 121, 152, 0.95)",
+            titleColor: "#fff",
+            bodyColor: "#d1fae5",
+            borderColor: "rgba(255, 255, 255, 0.46)",
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            display: false
+          },
+          y: {
+            min: 0,
+            max: 100,
+            ticks: {
+              stepSize: 25,
+              color: "rgb(255, 255, 255)",
+              callback: v => v + "%"
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.2)",
+              drawBorder: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateVolumeGraph(volume) {
+    if (!volumeChart) return; 
+
+    volumeChart.data.labels.push("");
+    volumeChart.data.datasets[0].data.push(volume);
+
+    if (volumeChart.data.labels.length > 15) {
+      volumeChart.data.labels.shift();
+      volumeChart.data.datasets[0].data.shift();
+    }
+
+    volumeChart.update();
+  }
 
   // Poll volume every 300ms
   setInterval(async () => {
@@ -289,6 +394,8 @@
 
       volText.innerText = data.volume + "%";
       statusText.innerText = data.status;
+
+      updateVolumeGraph(data.volume);
 
       // color logic
       if (data.status.includes("paused")) {
@@ -311,6 +418,8 @@
     toggleBtn.innerText = feedHidden ? 'Show Feed' : 'Hide Feed';
     statusText.innerText = feedHidden ? 'Feed hidden' : 'Feed visible';
   };
+
+  document.addEventListener("DOMContentLoaded", initChart);
 </script>
 </body>
 </html>
