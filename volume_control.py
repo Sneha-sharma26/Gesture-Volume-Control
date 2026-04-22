@@ -118,18 +118,18 @@ def gen_frames():
         else:
             system_status = "No hand detected"
         
-        # Latency measurement
-        end = time.time()  # ← stop timer HERE
-        latency_ms = (end - start) * 1000
-        print(f"Latency: {latency_ms:.2f} ms")  
+        # # Latency measurement
+        # end = time.time()  # ← stop timer HERE
+        # latency_ms = (end - start) * 1000
+        # print(f"Latency: {latency_ms:.2f} ms")  
         
-        # FPS calculation
-        time_diff = end - start
-        if time_diff > 0:
-            fps = 1 / time_diff
-        else:
-            fps = 0
-        print(f"Latency: {latency_ms:.2f} ms | FPS: {fps:.2f}") 
+        # # FPS calculation
+        # time_diff = end - start
+        # if time_diff > 0:
+        #     fps = 1 / time_diff
+        # else:
+        #     fps = 0
+        # print(f"Latency: {latency_ms:.2f} ms | FPS: {fps:.2f}") 
         
         _, buffer = cv2.imencode('.jpg', img)
         yield (b'--frame\r\n'
