@@ -150,4 +150,4 @@ def get_volume():
     return jsonify({"volume": current_volume_percent, "status": system_status})
 
 if __name__ == '__main__':
-    app.run(debug=False, use_reloader=False)
+    app.run(debug=True, use_reloader=False)
